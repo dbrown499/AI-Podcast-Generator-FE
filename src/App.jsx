@@ -9,11 +9,17 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [audioUrl, setAudioUrl] = useState(null);
 
-  
+  // Function to validate the transcript
+  function isTranscript(text) {
+    const hasSpeakerLabels = /(\bSpeaker\s?\d+:|\bPerson\s?\d+:)/i.test(text);
+    const hasTimestamps = /\[\d{2}:\d{2}(:\d{2})?\]/.test(text);
+    return hasSpeakerLabels || hasTimestamps;
+  }
+
   const handleChange = (e) => {
     setTranscript(e.target.value);
   };
-  // console.log(transcript)
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault() // Prevent page reload
@@ -52,7 +58,7 @@ function App() {
   }
 }
 
-  // console.log(handleChange())
+  console.log(isTranscript(transcript))
 
   return (
     <div className="container">
@@ -65,7 +71,8 @@ function App() {
       </div>
 
       <div className="input-container">
-        <input 
+        <textarea 
+        class="input-field"
         type="text" 
         placeholder="Paste your transcript here..."
         value={transcript}
@@ -75,7 +82,10 @@ function App() {
         />
       </div>
 
-      <button className="button" onClick={handleSubmit} disabled={loading}>{loading ? "Generating..." : "✨ Start Generate"}
+      <button 
+      className="button" 
+      onClick={handleSubmit} 
+      disabled={loading || !isTranscript(transcript)}>{loading ? "Generating..." : "✨ Start Generate"}
       </button>
 
       {audioUrl && (
