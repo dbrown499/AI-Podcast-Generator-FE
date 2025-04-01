@@ -1,35 +1,93 @@
-import { useState } from 'react'
-// import reactLogo from './assets/react.svg'
-// import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useState } from 'react'
+import './Styling/App.scss'
+
+const API = import.meta.env.VITE_API_URL;
+
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [transcript, setTranscript] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [audioUrl, setAudioUrl] = useState(null);
+
+  
+  const handleChange = (e) => {
+    setTranscript(e.target.value);
+  };
+  // console.log(transcript)
+
+  const handleSubmit = async (e) => {
+    e.preventDefault() // Prevent page reload
+    setLoading(true)
+
+  try {
+    const response = await fetch(`${API}/text-generator`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        'text': transcript
+    }), // Send transcript as JSON
+    })
+
+// console.log('YOOOOOOO', response)
+    if (response.ok) {
+      const audioBlob = await response.blob(); // Convert response to audio blob
+      const url = URL.createObjectURL(audioBlob); // Create audio URL
+      setAudioUrl(url); // Save it to state
+      console.log("Audio received:", url);
+
+      // const data = await response.json()
+      // console.log('Response from backend:', data)
+      // alert('Transcript submitted successfully!')
+    } else {
+      console.error('Error submitting transcript:', response.statusText)
+      alert("Failed to generate audio.");
+    }
+  } catch (error) {
+    console.error('Error:', error)
+    alert('An error occurred while submitting the transcript.')
+  } finally {
+    setLoading(false)
+  }
+}
+
+  // console.log(handleChange())
 
   return (
-    <>
-    <div>hey</div>
-      {/* <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="container">
+      <h1 className="title">AI Podcast Generator</h1>
+      <p className="subtitle">Transform your content into shareable podcast episodes</p>
+
+      <div className="options">
+        <span className="option">Upload Audio</span>
+        <span className="option">Enter Transcript</span>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
+
+      <div className="input-container">
+        <input 
+        type="text" 
+        placeholder="Paste your transcript here..."
+        value={transcript}
+        onChange={(e) => setTranscript(e.target.value)}
+
+        // onChange={handleChange}
+        />
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p> */}
-    </>
+
+      <button className="button" onClick={handleSubmit} disabled={loading}>{loading ? "Generating..." : "✨ Start Generate"}
+      </button>
+
+      {audioUrl && (
+            <div className="audio-container">
+                <h3>Generated Audio:</h3>
+                <audio controls>
+                    <source src={audioUrl} type="audio/mpeg" />
+                    Your browser does not support the audio element.
+                </audio>
+            </div>
+        )}
+    </div>
   )
 }
 
